@@ -41,10 +41,10 @@ public class MotoInventoryController {
     // Methods
     @RequestMapping(value = "/vehicle/{vin}", method = RequestMethod.GET)
     @ResponseStatus(value = HttpStatus.OK)
-    public Map<String, String> getMotorcycleByVin() {
+    public Map<String, String> getMotorcycleByVin(@PathVariable String vin) {
         Map<String, String> vehicleMap = new HashMap<>();
         List<ServiceInstance> instances = discoveryClient.getInstances(vinLookupServiceName);
-        String vinLookupServiceUri = serviceProtocol + instances.get(0).getHost() + ":" + instances.get(0).getPort() + servicePath;
+        String vinLookupServiceUri = serviceProtocol + instances.get(0).getHost() + ":" + instances.get(0).getPort() + servicePath + vin;
         Vehicle vehicle = restTemplate.getForObject(vinLookupServiceUri, Vehicle.class);
         vehicleMap.put("Vehicle Type", vehicle.getType());
         vehicleMap.put("Vehicle Make", vehicle.getMake());
@@ -57,8 +57,7 @@ public class MotoInventoryController {
     @RequestMapping(value = "/motorcycles", method = RequestMethod.POST)
     @ResponseStatus(value = HttpStatus.CREATED)
     public Motorcycle createMotorcycle(@RequestBody @Valid Motorcycle motorcycle) {
-
-        return motorcycle;
+        return motoInventoryDao.addMotorcycle(motorcycle);
     }
 
     @RequestMapping(value = "/motorcycles/{motoId}", method = RequestMethod.GET)
@@ -67,16 +66,7 @@ public class MotoInventoryController {
         if (motoId < 1) {
            throw new IllegalArgumentException("MotoId must be greater than 0.");
         }
-
-        Motorcycle moto = new Motorcycle();
-        moto.setId(motoId);
-        moto.setVin("54321");
-        moto.setMake("Ducati");
-        moto.setModel("Multistrada Enduro");
-        moto.setYear("2018");
-        moto.setColor("Red");
-
-        return moto;
+        return motoInventoryDao.getMotorcycle(motoId);
     }
 
     @RequestMapping(value = "/motorcycles/{motoId}", method = RequestMethod.DELETE)
